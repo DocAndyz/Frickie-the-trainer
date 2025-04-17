@@ -3,19 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCTV & Electronics Chatbot</title>
-    <link rel="stylesheet" href="/style.css">
+    <title>CCTV Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .chat-container {
+            width: 400px;
+            margin: 50px auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .chat-box {
+            height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .chat-entry {
+            margin: 10px 0;
+        }
+        .bot-msg {
+            text-align: left;
+            background-color: #e0e0e0;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        .user-msg {
+            text-align: right;
+            background-color: #a5d6a7;
+            padding: 8px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
 
-    <div class="chat-container">
-        <div class="chat-window" id="chat-window"></div>
-        <div class="input-container">
-            <input type="text" id="user-input" placeholder="Ask me anything about CCTV or electronics...">
-            <button id="send-btn">Send</button>
-        </div>
-    </div>
+<div class="chat-container">
+    <div class="chat-box" id="chat-box"></div>
+    <input type="text" id="user-input" class="chat-input" placeholder="Ask a CCTV or CMD question..." onkeydown="if(event.key === 'Enter') { getResponse(); }">
+</div>
 
-    <script src="/script.js"></script>
+<script>
+    const responses = {
+        "how to check cctv camera status using cmd": "You can use the 'ping' command to check if the camera's IP address is reachable. Example: 'ping [Camera IP Address]'",
+        "how to find ip address of a cctv camera": "Use 'ipconfig' to view your local IP configuration. Then, use 'ping' to find the camera's IP if needed. Example: 'ping [Camera IP Address]'",
+        "how to trace the network path to the cctv camera": "Use 'tracert [Camera IP Address]' to trace the network path to your CCTV camera.",
+        "how to test network connectivity to a cctv camera": "Use 'ping [Camera IP Address]' to test the connection to the camera.",
+        "how to find out which devices are connected to your network": "Use 'arp -a' to list all devices on the local network.",
+        "how to check if a cctv camera is online": "Use 'ping [Camera IP Address]' to test if the camera is online.",
+        "how to change the ip address of a cctv camera in windows": "Access the camera's web interface via its default IP and adjust network settings there.",
+        "how to check for a firewall blocking cctv camera communication": "Use 'netstat -a' to check the status of network connections and see if any are blocked.",
+        "how to check if a cctv camera is using a static ip": "Use 'ipconfig' to check the current IP configuration and determine if it's static or dynamic.",
+        "how to check the status of ports in use for cctv dvr": "Use 'netstat -an | find \"8080\"' to check for open ports.",
+        "how to configure an ip address for a cctv camera using cmd": "IP addresses for cameras are generally configured through the camera's web interface, not via CMD.",
+        "how to configure router to allow cctv camera access remotely": "You will need to forward the necessary ports (usually HTTP or RTSP ports) in your router's settings.",
+        "how to check cctv recording status via cmd": "Recording status is generally checked through the camera's web interface or NVR software.",
+        "how to restart the cctv camera using cmd": "You cannot restart a CCTV camera directly via CMD. This can only be done physically or through its web interface.",
+        "how to check for ip address conflicts on a network with cctv cameras": "Use 'arp -a' to list IP addresses and check for conflicts.",
+        "how to view open ports on a cctv device using cmd": "Use 'netstat -an | find \"80\"' to check for open ports on your device.",
+        "how to check the bandwidth usage of cctv cameras on the network": "You can monitor network usage using 'netstat' or third-party bandwidth monitoring tools.",
+        "how to check the resolution of a cctv camera": "Resolution information is usually found through the camera's web interface.",
+        "how to delete cctv footage remotely": "Access the camera or NVR/DVR interface and delete footage manually.",
+        "how to format a dvr’s hard drive using cmd": "Use the 'format' command, but be cautious as this will erase all files. Example: 'format [drive letter]:'.",
+        "how to check if your cctv dvr is recording properly": "Typically, you can verify this via the NVR/DVR interface or check the storage drive for recorded footage.",
+        "how to change password of cctv camera via cmd": "Password changes are typically done through the camera's web interface, not CMD.",
+        "how to reset camera password using cmd": "This requires a physical reset button on the camera.",
+        "how to enable encryption for cctv camera feed via cmd": "Encryption settings are usually done via the camera's web interface or NVR software.",
+        "how to restrict ip addresses to access the cctv system": "Configure your router's firewall settings or use access control features on the camera to restrict access by IP address.",
+        "how to check network packets being sent by cctv cameras": "Use 'netstat -s' to view packet statistics.",
+        "how to check bandwidth usage of cctv camera streams": "Use 'netstat' to observe network traffic associated with the camera's IP address.",
+        "how to check if a cctv camera is using a vpn": "Use a network sniffer tool or check the camera’s settings to verify VPN usage.",
+        "how to change cctv camera's dns settings using cmd": "This is usually done through the camera's web interface, not CMD.",
+        "how to check current connection speed of cctv camera": "Use 'ping' and 'tracert' to test latency, but monitor the camera interface for more accurate speed measurements.",
+        // Add more questions as necessary here
+    };
+
+    function displayMessage(message, sender) {
+        const chatBox = document.getElementById('chat-box');
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add(sender + '-msg');
+        messageDiv.textContent = message;
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function getResponse() {
+        const userInput = document.getElementById('user-input').value.toLowerCase().trim();
+        if (userInput) {
+            displayMessage(userInput, 'user');
+            document.getElementById('user-input').value = ''; // Clear the input field
+            
+            const response = responses[userInput] || "Sorry, I don't have an answer for that question.";
+            displayMessage(response, 'bot');
+        }
+    }
+</script>
+
 </body>
 </html>
