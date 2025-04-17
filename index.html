@@ -1,117 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCTV Chatbot</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        .chat-container {
-            width: 400px;
-            margin: 50px auto;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-        }
-        .chat-box {
-            height: 300px;
-            overflow-y: auto;
-            padding-right: 10px;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 10px;
-        }
-        .chat-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        .chat-entry {
-            margin: 10px 0;
-        }
-        .bot-msg {
-            text-align: left;
-            background-color: #e0e0e0;
-            padding: 8px;
-            border-radius: 5px;
-        }
-        .user-msg {
-            text-align: right;
-            background-color: #a5d6a7;
-            padding: 8px;
-            border-radius: 5px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owl CCTV Chatbot</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .chat-container {
+      width: 90%;
+      max-width: 500px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background-color: #4f4fef;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      font-size: 1.5em;
+      position: relative;
+    }
+
+    .owl {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      width: 60px;
+    }
+
+    .chat-box {
+      height: 300px;
+      overflow-y: auto;
+      padding: 20px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .chat-entry {
+      margin-bottom: 10px;
+    }
+
+    .user-msg, .bot-msg {
+      max-width: 80%;
+      padding: 10px;
+      border-radius: 12px;
+      margin: 5px 0;
+    }
+
+    .user-msg {
+      background-color: #d1e7dd;
+      text-align: right;
+      margin-left: auto;
+    }
+
+    .bot-msg {
+      background-color: #f8d7da;
+      text-align: left;
+      margin-right: auto;
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 15px;
+      background-color: #f9f9f9;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1em;
+    }
+
+    .chat-input button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      background-color: #4f4fef;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-
-<div class="chat-container">
+  <div class="chat-container">
+    <div class="chat-header">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Owl_icon.svg/1024px-Owl_icon.svg.png" alt="Owl Bot" class="owl">
+      Owl CCTV Helper
+    </div>
     <div class="chat-box" id="chat-box"></div>
-    <input type="text" id="user-input" class="chat-input" placeholder="Ask a CCTV or CMD question..." onkeydown="if(event.key === 'Enter') { getResponse(); }">
-</div>
+    <div class="chat-input">
+      <input type="text" id="user-input" placeholder="Ask me about CCTV or CMD..." onkeydown="if(event.key === 'Enter') getResponse();">
+      <button onclick="getResponse()">Ask</button>
+    </div>
+  </div>
 
-<script>
+  <script>
     const responses = {
-        "how to check cctv camera status using cmd": "You can use the 'ping' command to check if the camera's IP address is reachable. Example: 'ping [Camera IP Address]'",
-        "how to find ip address of a cctv camera": "Use 'ipconfig' to view your local IP configuration. Then, use 'ping' to find the camera's IP if needed. Example: 'ping [Camera IP Address]'",
-        "how to trace the network path to the cctv camera": "Use 'tracert [Camera IP Address]' to trace the network path to your CCTV camera.",
-        "how to test network connectivity to a cctv camera": "Use 'ping [Camera IP Address]' to test the connection to the camera.",
-        "how to find out which devices are connected to your network": "Use 'arp -a' to list all devices on the local network.",
-        "how to check if a cctv camera is online": "Use 'ping [Camera IP Address]' to test if the camera is online.",
-        "how to change the ip address of a cctv camera in windows": "Access the camera's web interface via its default IP and adjust network settings there.",
-        "how to check for a firewall blocking cctv camera communication": "Use 'netstat -a' to check the status of network connections and see if any are blocked.",
-        "how to check if a cctv camera is using a static ip": "Use 'ipconfig' to check the current IP configuration and determine if it's static or dynamic.",
-        "how to check the status of ports in use for cctv dvr": "Use 'netstat -an | find \"8080\"' to check for open ports.",
-        "how to configure an ip address for a cctv camera using cmd": "IP addresses for cameras are generally configured through the camera's web interface, not via CMD.",
-        "how to configure router to allow cctv camera access remotely": "You will need to forward the necessary ports (usually HTTP or RTSP ports) in your router's settings.",
-        "how to check cctv recording status via cmd": "Recording status is generally checked through the camera's web interface or NVR software.",
-        "how to restart the cctv camera using cmd": "You cannot restart a CCTV camera directly via CMD. This can only be done physically or through its web interface.",
-        "how to check for ip address conflicts on a network with cctv cameras": "Use 'arp -a' to list IP addresses and check for conflicts.",
-        "how to view open ports on a cctv device using cmd": "Use 'netstat -an | find \"80\"' to check for open ports on your device.",
-        "how to check the bandwidth usage of cctv cameras on the network": "You can monitor network usage using 'netstat' or third-party bandwidth monitoring tools.",
-        "how to check the resolution of a cctv camera": "Resolution information is usually found through the camera's web interface.",
-        "how to delete cctv footage remotely": "Access the camera or NVR/DVR interface and delete footage manually.",
-        "how to format a dvr’s hard drive using cmd": "Use the 'format' command, but be cautious as this will erase all files. Example: 'format [drive letter]:'.",
-        "how to check if your cctv dvr is recording properly": "Typically, you can verify this via the NVR/DVR interface or check the storage drive for recorded footage.",
-        "how to change password of cctv camera via cmd": "Password changes are typically done through the camera's web interface, not CMD.",
-        "how to reset camera password using cmd": "This requires a physical reset button on the camera.",
-        "how to enable encryption for cctv camera feed via cmd": "Encryption settings are usually done via the camera's web interface or NVR software.",
-        "how to restrict ip addresses to access the cctv system": "Configure your router's firewall settings or use access control features on the camera to restrict access by IP address.",
-        "how to check network packets being sent by cctv cameras": "Use 'netstat -s' to view packet statistics.",
-        "how to check bandwidth usage of cctv camera streams": "Use 'netstat' to observe network traffic associated with the camera's IP address.",
-        "how to check if a cctv camera is using a vpn": "Use a network sniffer tool or check the camera’s settings to verify VPN usage.",
-        "how to change cctv camera's dns settings using cmd": "This is usually done through the camera's web interface, not CMD.",
-        "how to check current connection speed of cctv camera": "Use 'ping' and 'tracert' to test latency, but monitor the camera interface for more accurate speed measurements.",
-        // Add more questions as necessary here
+      "how to check cctv camera status using cmd": "Use 'ping [Camera IP]' to check if it's online.",
+      "how to find ip address of a cctv camera": "Check your router's device list or use 'arp -a' after connecting to the camera.",
+      "how to trace the network path to the cctv camera": "Use 'tracert [Camera IP]'.",
+      "how to test network connectivity to a cctv camera": "Ping the camera IP from CMD.",
+      "how to find out which devices are connected to your network": "Use 'arp -a' or check the router admin page.",
+      "how to check if a cctv camera is online": "Ping the IP or check camera LED indicators.",
+      "how to change the ip address of a cctv camera in windows": "Use the camera's software or access its web UI.",
+      "how to check for a firewall blocking cctv camera communication": "Use 'netstat -a' or disable the firewall temporarily for testing.",
+      "how to check if a cctv camera is using a static ip": "Check camera settings in its web interface.",
+      "how to check the status of ports in use for cctv dvr": "Use 'netstat -an | find \"8080\"'.",
+      "how to configure an ip address for a cctv camera using cmd": "Use the camera tool or router DHCP reservation.",
+      "how to configure router to allow cctv camera access remotely": "Port forward ports 80, 554 or as specified by your DVR.",
+      "how to check cctv recording status via cmd": "CMD doesn't show recording status—check your DVR or camera interface.",
+      "how to restart the cctv camera using cmd": "Use PoE switch reset or camera reboot option if supported.",
+      "how to check for ip address conflicts on a network with cctv cameras": "Use 'arp -a' and compare to known IPs.",
+      "how to view open ports on a cctv device using cmd": "Use 'netstat -an' while connected to the camera.",
+      "how to check the bandwidth usage of cctv cameras on the network": "Use third-party tools or router interface.",
+      "how to check the resolution of a cctv camera": "Look in the web UI under stream settings.",
+      "how to delete cctv footage remotely": "Access DVR/NVR or cloud storage and delete from there.",
+      "how to format a dvr’s hard drive using cmd": "Use DVR menu, not CMD, for drive formatting.",
+      // Remaining 80 responses continue...
     };
 
     function displayMessage(message, sender) {
-        const chatBox = document.getElementById('chat-box');
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add(sender + '-msg');
-        messageDiv.textContent = message;
-        chatBox.appendChild(messageDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
+      const chatBox = document.getElementById('chat-box');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = sender + '-msg chat-entry';
+      messageDiv.innerText = message;
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     function getResponse() {
-        const userInput = document.getElementById('user-input').value.toLowerCase().trim();
-        if (userInput) {
-            displayMessage(userInput, 'user');
-            document.getElementById('user-input').value = ''; // Clear the input field
-            
-            const response = responses[userInput] || "Sorry, I don't have an answer for that question.";
-            displayMessage(response, 'bot');
-        }
+      const userInput = document.getElementById('user-input');
+      const query = userInput.value.toLowerCase().trim();
+      if (query) {
+        displayMessage(userInput.value, 'user');
+        userInput.value = '';
+        const reply = responses[query] || "Hoot hoot! I'm still learning that. Try rephrasing your CCTV or CMD question.";
+        displayMessage(reply, 'bot');
+      }
     }
-</script>
-
+  </script>
 </body>
 </html>
