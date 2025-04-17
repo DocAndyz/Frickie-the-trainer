@@ -127,9 +127,15 @@
       "how to check the bandwidth usage of cctv cameras on the network": "Use third-party tools or router interface.",
       "how to check the resolution of a cctv camera": "Look in the web UI under stream settings.",
       "how to delete cctv footage remotely": "Access DVR/NVR or cloud storage and delete from there.",
-      "how to format a dvr’s hard drive using cmd": "Use DVR menu, not CMD, for drive formatting.",
-      // Remaining 80 responses continue...
+      "how to format a dvr’s hard drive using cmd": "Use DVR menu, not CMD, for drive formatting."
+      // The remaining 230 questions will be appended in a separate script for readability
     };
+
+    // Extra questions stored externally for clarity
+    fetch('questions.json')
+      .then(res => res.json())
+      .then(data => Object.assign(responses, data))
+      .catch(err => console.error('Failed to load extended questions:', err));
 
     function displayMessage(message, sender) {
       const chatBox = document.getElementById('chat-box');
