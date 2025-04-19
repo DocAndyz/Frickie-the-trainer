@@ -1,41 +1,50 @@
-// Function to append a new message to the chat window
-function appendMessage(message, sender) {
-    const chatWindow = document.getElementById('chat-window');
-    const div = document.createElement('div');
-    div.classList.add('message');
-    div.classList.add(sender + '-message');
-    div.textContent = message;
-    chatWindow.appendChild(div);
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-}
+const express = require('express');
+const bodyParser = require('body-parser');
+const fetch = require('node-fetch');
+const cors = require('cors');
+require('dotenv').config();
 
-// Send user message to backend and display bot response
-async function sendMessageToBackend(userMessage) {
-    const response = await fetch('/chat', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query: userMessage }),
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Use CORS middleware to allow cross-origin requests
+app.use(cors());
+
+// Body parser middleware to parse JSON requests
+app.use(bodyParser.json());
+
+app.post('/proxy', async (req, res) => {
+  const prompt = req.body.prompt;
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "You are a helpful expert owl assistant who answers all questions about CMD, CCTV, and electronics clearly and politely." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.6,
+        max_tokens: 300
+      })
     });
-    const data = await response.json();
-    return data.reply;
-}
 
-// Event listener for sending user message
-document.getElementById('send-btn').addEventListener('click', async () => {
-    const userInput = document.getElementById('user-input').value;
-    if (userInput.trim()) {
-        appendMessage(userInput, 'user');
-        document.getElementById('user-input').value = '';
-        const botReply = await sendMessageToBackend(userInput);
-        appendMessage(botReply, 'bot');
-    }
+    const data = await response.json();
+    const owlResponse = data.choices?.[0]?.message?.content?.trim() || "No response from the owl.";
+    res.json({ response: owlResponse });
+
+  } catch (error) {
+    console.error("Error from OpenAI:", error);
+    res.status(500).json({ response: "The owl encountered a glitch in the forest." });
+  }
 });
 
-// Allow pressing "Enter" to send the message
-document.getElementById('user-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        document.getElementById('send-btn').click();
-    }
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
