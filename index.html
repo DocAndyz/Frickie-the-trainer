@@ -1,55 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Ask The Owl</title>
+  <meta charset="UTF-8" />
+  <title>Owl Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
-      padding: 2em;
-      max-width: 600px;
-      margin: auto;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
     }
-    input, button {
-      font-size: 1em;
-      padding: 0.5em;
-      margin-top: 1em;
-      width: 100%;
+
+    .assistant-container {
+      text-align: center;
+      position: relative;
+      margin-bottom: 30px;
     }
-    #response {
+
+    .speech-bubble {
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
       background: #fff;
-      border-left: 4px solid #444;
-      padding: 1em;
-      margin-top: 1em;
-      font-style: italic;
-      color: #333;
-      white-space: pre-wrap;
+      border: 2px solid #ccc;
+      border-radius: 15px;
+      padding: 10px 20px;
+      max-width: 320px;
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+      font-size: 16px;
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      margin-left: -10px;
+      border-width: 10px;
+      border-style: solid;
+      border-color: #fff transparent transparent transparent;
+    }
+
+    img.owl {
+      width: 150px;
+    }
+
+    input[type="text"] {
+      width: 300px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-left: 10px;
+      font-size: 16px;
+      background-color: #4f4fef;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #3737cc;
     }
   </style>
 </head>
 <body>
-  <h1>🦉 Ask the Wise Owl</h1>
-  <input type="text" id="prompt" placeholder="Type your question here..." />
-  <button onclick="sendPrompt()">Ask</button>
 
-  <div id="response"></div>
+  <div class="assistant-container">
+    <div class="speech-bubble" id="response">Hello, how can I help you?</div>
+    <img src="Owl.jpeg" alt="Owl Assistant" class="owl" />
+  </div>
+
+  <div>
+    <input type="text" id="userInput" placeholder="Ask anything about CMD, CCTV or Electronics" />
+    <button onclick="askOwl()">Ask</button>
+  </div>
 
   <script>
-    async function sendPrompt() {
-      const prompt = document.getElementById('prompt').value;
-      const responseDiv = document.getElementById('response');
-      responseDiv.textContent = "The owl is thinking...";
+    async function askOwl() {
+      const input = document.getElementById("userInput").value.trim();
+      const responseDiv = document.getElementById("response");
 
-      const res = await fetch('https://overjoyed-grizzled-tyrannosaurus.glitch.me/proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
+      if (!input) {
+        responseDiv.textContent = "Please type a question!";
+        return;
+      }
 
-      const data = await res.json();
-      responseDiv.textContent = data.response || "Hmm, the owl says nothing...";
+      responseDiv.textContent = "Thinking... 🦉";
+
+      try {
+        const res = await fetch("https://overjoyed-grizzled-tyrannosaurus.glitch.me/proxy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: input })
+        });
+
+        const result = await res.json();
+        responseDiv.textContent = result.response || "The owl is silent... 🦉";
+      } catch (error) {
+        console.error("Error with request:", error);
+        responseDiv.textContent = "Oops! The owl encountered an error.";
+      }
     }
   </script>
+
 </body>
 </html>
