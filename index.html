@@ -108,17 +108,17 @@
           body: JSON.stringify({ prompt: input })
         });
 
-        const result = await res.json();
-        console.log("Owl says:", result);
-
-        if (result.response) {
-          responseDiv.textContent = result.response;
+        const data = await res.json();
+        
+        if (data.response) {
+          responseDiv.textContent = data.response;
         } else {
-          responseDiv.textContent = "Hoot! Something went wrong.";
+          responseDiv.textContent = "Sorry, I couldn't find an answer to that.";
         }
+
       } catch (error) {
-        console.error("Error talking to Owl:", error);
-        responseDiv.textContent = "The owl got confused in the trees.";
+        responseDiv.textContent = "Oops! I had a hiccup while thinking. Please try again.";
+        console.error("Error with the request:", error);
       }
     }
   </script>
