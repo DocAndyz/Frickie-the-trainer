@@ -12,22 +12,32 @@ app.post('/proxy', async (req, res) => {
   const prompt = req.body.prompt;
   const apiKey = process.env.OPENAI_API_KEY;
 
-  const response = await fetch("https://api.openai.com/v1/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: "text-davinci-003",  // You can swap this with gpt-3.5-turbo if using /chat/completions
-      prompt: `🦉 Owl says: ${prompt}`,
-      max_tokens: 100,
-      temperature: 0.7
-    })
-  });
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "You are a helpful expert owl assistant who answers all questions about CMD, CCTV, and electronics clearly and politely." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.6,
+        max_tokens: 300
+      })
+    });
 
-  const data = await response.json();
-  res.json({ response: data.choices?.[0]?.text?.trim() || "No reply from owl." });
+    const data = await response.json();
+    const owlResponse = data.choices?.[0]?.message?.content?.trim() || "No response from the owl.";
+    res.json({ response: owlResponse });
+
+  } catch (error) {
+    console.error("Error from OpenAI:", error);
+    res.status(500).json({ response: "The owl encountered a glitch in the forest." });
+  }
 });
 
 app.listen(PORT, () => {
