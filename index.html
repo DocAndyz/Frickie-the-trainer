@@ -97,20 +97,28 @@
         return;
       }
 
-      responseDiv.textContent = "Thinking... 🦉";
+      responseDiv.textContent = "Thinking...";
 
       try {
         const res = await fetch("https://overjoyed-grizzled-tyrannosaurus.glitch.me/proxy", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({ prompt: input })
         });
 
         const result = await res.json();
-        responseDiv.textContent = result.response || "The owl is silent... 🦉";
+        console.log("Owl says:", result);
+
+        if (result.response) {
+          responseDiv.textContent = result.response;
+        } else {
+          responseDiv.textContent = "Hoot! Something went wrong.";
+        }
       } catch (error) {
-        console.error("Error with request:", error);
-        responseDiv.textContent = "Oops! The owl encountered an error.";
+        console.error("Error talking to Owl:", error);
+        responseDiv.textContent = "The owl got confused in the trees.";
       }
     }
   </script>
