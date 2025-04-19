@@ -1,51 +1,35 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const dialogflow = require('@google-cloud/dialogflow');
-const uuid = require('uuid');
+const fetch = require('node-fetch');
+require('dotenv').config();
 
-// Set up Express
 const app = express();
-const port = process.env.PORT || 3000;
-app.use(express.static('public'));
+const PORT = process.env.PORT || 3000;
+
 app.use(bodyParser.json());
 
-// Set up Dialogflow client
-const sessionClient = new dialogflow.SessionsClient();
-const projectId = 'your-dialogflow-project-id';  // Replace with your Dialogflow project ID
+app.post('/proxy', async (req, res) => {
+  const prompt = req.body.prompt;
+  const apiKey = process.env.OPENAI_API_KEY;
 
-// Create a unique session ID
-const sessionId = uuid.v4();
+  const response = await fetch("https://api.openai.com/v1/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: "text-davinci-003",  // You can swap this with gpt-3.5-turbo if using /chat/completions
+      prompt: `🦉 Owl says: ${prompt}`,
+      max_tokens: 100,
+      temperature: 0.7
+    })
+  });
 
-// Create session path
-const sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
-
-// Handle incoming chat requests
-app.post('/chat', async (req, res) => {
-    const userText = req.body.query;
-
-    // Create a request object for Dialogflow
-    const request = {
-        session: sessionPath,
-        queryInput: {
-            text: {
-                text: userText,
-                languageCode: 'en',
-            },
-        },
-    };
-
-    try {
-        // Send request to Dialogflow
-        const responses = await sessionClient.detectIntent(request);
-        const result = responses[0].queryResult;
-        res.json({ reply: result.fulfillmentText });
-    } catch (error) {
-        console.error(error);
-        res.json({ reply: 'Sorry, I couldn't understand your question.' });
-    }
+  const data = await response.json();
+  res.json({ response: data.choices?.[0]?.text?.trim() || "No reply from owl." });
 });
 
-// Start the server
-app.listen(port, () => {
-    console.log(\`Server is running on port \${port}\`);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
